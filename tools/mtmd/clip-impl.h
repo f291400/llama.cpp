@@ -746,11 +746,11 @@ static inline int clip_youtu_omni_audio_tokens(int n_frames) {
 // One video frame is 100/8 = 12.5 audio tokens on the shared time axis.
 // ggml RoPE positions are int32, so the group graph stores every channel in
 // half-steps and sets freq_scale to 0.5. 12.5 becomes 25.
-inline int clip_youtu_half(int value) {
+static inline int clip_youtu_half(int value) {
     return value * 2;
 }
 
-inline int clip_youtu_frame_half(int frame_index) {
+static inline int clip_youtu_frame_half(int frame_index) {
     return frame_index * 25;
 }
 
@@ -760,8 +760,7 @@ struct clip_youtu_event {
     const float * data = nullptr;
     int nx = 0;
     int ny = 0;
-    int valid = 0;
-    int n_out = 0;
+    int n_out = 0; // output embeddings of this event
 };
 
 struct clip_youtu_span {
@@ -772,7 +771,7 @@ struct clip_youtu_span {
     int ph = 0;
 };
 
-inline clip_youtu_span clip_youtu_span_of(const clip_youtu_event & ev, int patch, int merge) {
+static inline clip_youtu_span clip_youtu_span_of(const clip_youtu_event & ev, int patch, int merge) {
     clip_youtu_span span;
     span.kind = ev.kind;
     span.n_out = ev.n_out;
@@ -804,13 +803,8 @@ struct clip_image_f32 {
     int32_t lead_pad = 0;
     // valid mel frames before the conv chunk padding. 0 means "use nx" (already a multiple of 100)
     int32_t audio_n_frames = 0;
-    // Non-owned mel paired with this frame for youtu video fusion. Null on still
-    // images. The buffer has to stay alive until clip_encode returns.
-    const float * youtu_joint_mel = nullptr;
-    int32_t youtu_joint_mel_frames = 0; // padded mel frames, a multiple of 100
-    int32_t youtu_joint_mel_bins = 0;
-    int32_t youtu_joint_mel_valid = 0;  // frames before that padding
-    // Non-owned group, event order. One graph encodes the whole group.
+    // youtu-omni video: non-owned group in event order, encoded in one graph.
+    // The event buffers have to stay alive until clip_encode returns.
     int32_t youtu_n_events = 0;
     const clip_youtu_event * youtu_events = nullptr;
     // separators appended after the image tokens

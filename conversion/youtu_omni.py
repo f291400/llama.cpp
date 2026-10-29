@@ -92,10 +92,7 @@ class YoutuOmniVisionModel(MmprojModel):
         self.gguf_writer.add_audio_num_mel_bins(int(self.hparams.get("num_mel_bins", 128)))
         self.gguf_writer.add_audio_head_dim(int(self.hparams.get("head_dim", 128)))
         self.gguf_writer.add_audio_attention_layernorm_eps(float(self.hparams.get("rms_norm_eps", 1e-6)))
-        self.gguf_writer.add_uint32(
-            "clip.audio.attention.head_count_kv",
-            int(self.hparams["num_key_value_heads"]),
-        )
+        self.gguf_writer.add_audio_head_count_kv(int(self.hparams["num_key_value_heads"]))
 
         n_layer = int(self.hparams["num_hidden_layers"])
         freq = self.hparams.get("video_fusion_layer_freq")
@@ -129,26 +126,8 @@ class YoutuOmniVisionModel(MmprojModel):
                 raise ValueError(f"Unexpected patch embedding shape {tuple(data_torch.shape)}, expected in_features={expected}")
             data_torch = data_torch.reshape(out_features, channels, patch_size, patch_size).contiguous()
 
-        # Conv kernels stay in PyTorch [OC, IC, KH, KW] order: the GGUF writer
-        # stores the last dimension as ne[0], which is ggml's [KW, KH, IC, OC].
-        if "audio_embeddings.conv2d" in name and (name.endswith(".weight") or name.endswith(".bias")):
-            which = name.split("conv2d", 1)[1].split(".", 1)[0]
-            if name.endswith(".bias"):
-                data_torch = data_torch.reshape(data_torch.shape[0], 1, 1)
-                yield f"a.conv2d.{which}.bias", data_torch
-            else:
-                yield f"a.conv2d.{which}.weight", data_torch
-            return
-        if name.endswith("audio_embeddings.linear_proj.weight"):
-            yield "a.conv_out.weight", data_torch
-            return
-        if name.endswith("audio_merger.norm.weight"):
-            yield "a.mm.norm.weight", data_torch
-            return
-        if name.endswith("audio_merger.linear_fc1.weight"):
-            yield "a.mm.fc1.weight", data_torch
-            return
-        if name.endswith("audio_merger.linear_fc2.weight"):
-            yield "a.mm.fc2.weight", data_torch
-            return
+        if "audio_embeddings.conv2d" in name and name.endswith(".bias"):
+            # transform conv2d bias [n_embd] --> [1, 1, n_embd]
+            data_torch = data_torch.unsqueeze(-1).unsqueeze(-1)
+
         yield from super().modify_tensors(data_torch, name, bid)

@@ -83,6 +83,12 @@ struct clip_graph_youtuvl : clip_graph {
 struct clip_graph_youtu_omni : clip_graph {
     clip_graph_youtu_omni(clip_ctx * ctx, const clip_image_f32 & img) : clip_graph(ctx, img) {}
     ggml_cgraph * build() override;
+    ggml_tensor * build_mm(ggml_tensor * w, ggml_tensor * x) const override;
+    ggml_tensor * build_image_tokens(ggml_tensor * raw, int pw, int ph);
+    ggml_tensor * build_audio_tokens(ggml_tensor * mel, int n_keep);
+    ggml_tensor * build_vision_merger(ggml_tensor * cur);
+    ggml_tensor * build_audio_merger(ggml_tensor * cur);
+    ggml_cgraph * build_group(ggml_tensor * freq);
 };
 
 struct clip_graph_yasa2 : clip_graph {

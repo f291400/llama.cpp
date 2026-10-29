@@ -124,8 +124,22 @@ struct mtmd_audio_preprocessor_qwen3a : mtmd_audio_preprocessor {
     void initialize() override;
     bool preprocess(const float * samples, size_t n_samples, std::vector<mtmd_audio_mel> & output) const override;
 
+  protected:
+    // whisper log-mel (center=True), max-8 clamp computed over the first n_frames frames
+    bool compute_mel(const float * samples, size_t n_samples, int64_t n_frames, mtmd_audio_mel & mel) const;
+    // frames [off, off + n), zero padded to whole 100-frame conv chunks
+    static mtmd_audio_mel slice_mel(const mtmd_audio_mel & mel, int64_t off, int64_t n);
+
   private:
     mtmd_audio_cache cache;
+};
+
+// youtu-omni: whisper mel without the last frame, split into 2-30 s chunks
+struct mtmd_audio_preprocessor_youtu_omni : mtmd_audio_preprocessor_qwen3a {
+    using mtmd_audio_preprocessor_qwen3a::mtmd_audio_preprocessor_qwen3a;
+    bool preprocess(const float * samples, size_t n_samples, std::vector<mtmd_audio_mel> & output) const override;
+    // video: mel of the whole track, then cut into consecutive pieces of piece_len samples each
+    bool preprocess_pieces(const float * samples, size_t n_samples, const std::vector<size_t> & piece_len, std::vector<mtmd_audio_mel> & output) const;
 };
 
 struct mtmd_audio_preprocessor_dots3note : mtmd_audio_preprocessor {

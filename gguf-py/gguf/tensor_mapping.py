@@ -2538,11 +2538,13 @@ class TensorNameMap:
         MODEL_TENSOR.A_ENC_CONV2D: (
             "audio_tower.conv2d{bid}", # qwen3omni
             "audio_encoder.dots_encoder.speech_encoder.conv2d{bid}", # dots3note
+            "model.omni_model.audio_embeddings.conv2d{bid}", # youtu-parsing-omni
         ),
 
         MODEL_TENSOR.A_ENC_CONV_OUT: (
             "audio_tower.conv_out", # qwen3omni
             "audio_encoder.dots_encoder.speech_encoder.conv_out", # dots3note
+            "model.omni_model.audio_embeddings.linear_proj", # youtu-parsing-omni
             "speaker_encoder.mfa.conv", # qwen3tts speaker encoder: multi-layer feature aggregation
         ),
 
@@ -2766,6 +2768,7 @@ class TensorNameMap:
             "audio_adapter.model.{bid}", # lfm2
             "audio_tower.proj{bid}", # qwen3omni
             "sound_projection.linear{bid}", # parakeet (linear1, linear2)
+            "model.omni_model.audio_merger.linear_fc{bid}", # youtu-parsing-omni (linear_fc1, linear_fc2)
         ),
 
         MODEL_TENSOR.A_MMPROJ_FC: (
@@ -2779,6 +2782,7 @@ class TensorNameMap:
             "audio.multi_modal_projector.ln_pre", # ultravox
             "audio_encoder.audio_adapter.proj.0", # dots3note
             "sound_projection.norm", # parakeet
+            "model.omni_model.audio_merger.norm", # youtu-parsing-omni
         ),
 
         MODEL_TENSOR.A_MM_NORM_MID: (

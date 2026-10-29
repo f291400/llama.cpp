@@ -149,7 +149,7 @@ MTMD_API bool mtmd_support_vision(const mtmd_context * ctx);
 // whether the current model supports audio input
 MTMD_API bool mtmd_support_audio(const mtmd_context * ctx);
 
-// video frames and the audio track are interleaved at 1 fps
+// video frames are interleaved with pieces of the audio track
 MTMD_API bool mtmd_video_interleave_audio(const mtmd_context * ctx);
 
 // get audio sample rate in Hz, for example 16000 for Whisper
